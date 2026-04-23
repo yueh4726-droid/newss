@@ -2,27 +2,33 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>權證標的日報</title>
     <style>
-        /* 請將你原本 HTML 內 <style> 到 </style> 的所有賽博龐克風格 CSS 貼在這裡 */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Share+Tech+Mono&display=swap');
         :root { --bg: #0a0e14; --surface: #111620; --border: #1e2a3a; --accent: #00d4ff; --text: #e0eaf5; --muted: #5a7a99; --card: #131c28; --bull: #00e676; --bear: #ff4444; }
-        body { background: var(--bg); color: var(--text); font-family: 'Noto Serif TC', serif; margin:0; }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-        header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start;}
-        .title-block h1 { color: var(--accent); font-size: 26px; margin:0; }
-        .date-badge { font-family: 'Share Tech Mono', monospace; color: var(--accent); background: rgba(0,212,255,0.08); padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(0,212,255,0.2); }
-        .status-bar { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--muted); background: var(--surface); padding: 10px; border-radius: 4px; margin-bottom: 20px; border-left: 3px solid var(--border); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Noto Serif TC', serif; min-height: 100vh; overflow-x: hidden; }
+        body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; position: relative; z-index: 1; }
+        header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .title-block h1 { font-size: 26px; font-weight: 900; color: var(--accent); text-shadow: 0 0 30px rgba(0,212,255,0.3); }
+        .date-badge { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--accent); background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2); padding: 6px 12px; border-radius: 4px; }
+        .status-bar { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--muted); margin-bottom: 20px; padding: 8px 12px; background: var(--surface); border-radius: 4px; border-left: 3px solid var(--border); }
         .status-bar.done { border-left-color: var(--bull); color: var(--bull); }
         .summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
-        .summary-card { background: var(--card); border: 1px solid var(--border); padding: 15px; text-align: center; border-radius: 6px; }
-        .num { font-size: 28px; font-weight: 700; font-family: 'Share Tech Mono'; }
-        .bull { color: var(--bull); } .bear { color: var(--bear); }
-        .stocks-list { display: flex; flex-direction: column; gap: 12px; }
-        .stock-card { background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: 8px; display: grid; grid-template-columns: 80px 1fr 100px; gap: 15px; }
-        .stock-id { color: var(--accent); font-size: 20px; font-weight: 700; }
-        .stock-title a { color: var(--text); text-decoration: none; font-weight: 700; }
-        .tag { font-size: 10px; padding: 2px 8px; border-radius: 3px; margin-right: 5px; border: 1px solid var(--border); }
+        .summary-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 14px; text-align: center; }
+        .summary-card .num { font-family: 'Share Tech Mono', monospace; font-size: 28px; font-weight: 700; }
+        .num.bull { color: var(--bull); } .num.bear { color: var(--bear); }
+        .stocks-list { display: flex; flex-direction: column; gap: 10px; }
+        .stock-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; display: grid; grid-template-columns: 80px 1fr 100px; gap: 12px; align-items: start; }
+        .stock-id { font-family: 'Share Tech Mono', monospace; font-size: 18px; font-weight: 700; color: var(--accent); }
+        .stock-title a { font-size: 14px; font-weight: 700; color: var(--text); text-decoration: none; line-height: 1.4; }
+        .stock-title a:hover { color: var(--accent); }
+        .tag { font-family: 'Share Tech Mono', monospace; font-size: 10px; padding: 2px 8px; border-radius: 3px; border: 1px solid var(--border); margin-right: 4px; }
+        .direction-badge { font-family: 'Share Tech Mono', monospace; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 4px; }
+        .direction-badge.bull { background: rgba(0,230,118,0.15); color: var(--bull); }
+        .direction-badge.bear { background: rgba(255,68,68,0.15); color: var(--bear); }
     </style>
 </head>
 <body>
@@ -30,17 +36,17 @@
     <header>
         <div class="title-block">
             <h1>⚡ 權證標的日報</h1>
-            <div style="color:var(--muted); font-size:11px; font-family:'Share Tech Mono'">WARRANT DAILY SCANNER</div>
+            <div style="font-family:'Share Tech Mono'; font-size:11px; color:var(--muted); margin-top:4px;">WARRANT DAILY SCANNER · POWERED BY AI</div>
         </div>
         <div class="date-badge" id="dateBadge">Loading...</div>
     </header>
 
-    <div class="status-bar" id="statusBar">▸ 系統準備中...</div>
+    <div class="status-bar" id="statusBar">▸ 正在同步最新權證資料...</div>
 
     <div class="summary-row" id="summaryRow">
-        <div class="summary-card"><div class="num bull" id="bullCount">0</div><div style="font-size:11px; color:var(--muted)">看多標的</div></div>
-        <div class="summary-card"><div class="num bear" id="bearCount">0</div><div style="font-size:11px; color:var(--muted)">看空標的</div></div>
-        <div class="summary-card"><div class="num" id="totalCount" style="color:var(--accent)">0</div><div style="font-size:11px; color:var(--muted)">總計標的</div></div>
+        <div class="summary-card"><div class="num bull" id="bullCount">0</div><div style="font-size:11px; color:var(--muted); margin-top:4px;">看多標的</div></div>
+        <div class="summary-card"><div class="num bear" id="bearCount">0</div><div style="font-size:11px; color:var(--muted); margin-top:4px;">看空標的</div></div>
+        <div class="summary-card"><div class="num" id="totalCount" style="color:var(--accent)">0</div><div style="font-size:11px; color:var(--muted); margin-top:4px;">總計標的</div></div>
     </div>
 
     <div class="stocks-list" id="stocksList"></div>
@@ -62,25 +68,25 @@
             const list = document.getElementById('stocksList');
             list.innerHTML = data.stocks.map(s => `
                 <div class="stock-card">
-                    <div class="stock-id">${s.id}<div style="font-size:12px;color:var(--muted)">${s.name}</div></div>
+                    <div><div class="stock-id">${s.id}</div><div style="font-size:11px; color:var(--muted)">${s.name}</div></div>
                     <div>
                         <div class="stock-title"><a href="${s.link}" target="_blank">${s.title}</a></div>
-                        <div style="font-size:12px;color:var(--muted);margin-top:5px;">${s.reason}</div>
+                        <div style="font-size:12px; color:var(--muted); margin-top:4px;">${s.reason}</div>
                         <div style="margin-top:8px">
-                            <span class="tag" style="color:${s.direction==='bull'?'#00e676':'#ff4444'}">${s.direction==='bull'?'▲ 認購':'▼ 認售'}</span>
+                            <span class="tag" style="color:${s.direction==='bull'?'var(--bull)':'var(--bear)'}">${s.direction==='bull'?'▲ 認購':'▼ 認售'}</span>
                             <span class="tag">${s.sourceName}</span>
                         </div>
                     </div>
                     <div style="text-align:right">
-                        <div style="color:var(--accent);font-weight:700">${s.date}</div>
-                        <div style="font-size:10px;color:var(--muted)">${s.time}</div>
+                        <div class="direction-badge ${s.direction}">${s.direction==='bull'?'CALL':'PUT'}</div>
+                        <div style="font-family:'Share Tech Mono'; font-size:10px; color:var(--muted); margin-top:8px">${s.date} ${s.time}</div>
                     </div>
                 </div>
             `).join('');
             status.className = "status-bar done";
-            status.innerHTML = "▸ 數據已同步，點擊標題可閱讀新聞原文";
+            status.innerHTML = "▸ 數據同步完成，點擊標題可閱讀新聞原文";
         } catch(e) {
-            status.innerHTML = "▸ 尚未產出今日數據，請待早上 07:00 自動更新";
+            status.innerHTML = "▸ 尚未產出數據，機器人將於每日 07:00 自動更新";
         }
     }
     window.onload = loadData;
