@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>萊特權證日報</title>
+    <style>
+        /* 直接定義核心樣式，避免外部引用失敗 */
+        :root { --bg: #0a0e14; --surface: #111620; --border: #1e2a3a; --accent: #00d4ff; --text: #e0eaf5; --muted: #5a7a99; --card: #131c28; --bull: #00e676; --bear: #ff4444; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; line-height: 1.6; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        header { border-bottom: 2px solid var(--accent); padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+        .title-block h1 { color: var(--accent); font-size: 28px; letter-spacing: 2px; }
+        .date-badge { color: var(--accent); background: rgba(0,212,255,0.1); padding: 8px 15px; border-radius: 5px; border: 1px solid var(--accent); font-weight: bold; }
+        .status-bar { background: var(--surface); padding: 12px; border-radius: 5px; margin-bottom: 25px; border-left: 5px solid var(--border); font-size: 14px; }
+        .summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
+        .summary-card { background: var(--card); border: 1px solid var(--border); padding: 20px; text-align: center; border-radius: 10px; }
+        .num { font-size: 32px; font-weight: bold; display: block; }
+        .bull { color: var(--bull); } .bear { color: var(--bear); }
+        .stocks-list { display: grid; gap: 15px; }
+        .stock-card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .stock-info { flex: 1; }
+        .stock-id { color: var(--accent); font-size: 22px; font-weight: bold; margin-bottom: 5px; }
+        .stock-title a { color: #fff; text-decoration: none; font-size: 18px; font-weight: bold; }
+        .stock-title a:hover { color: var(--accent); }
+        .tag { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 12px; margin: 5px 5px 0 0; background: var(--surface); border: 1px solid var(--border); }
+        .badge { font-weight: bold; padding: 5px 15px; border-radius: 20px; text-transform: uppercase; }
+        .badge-bull { background: rgba(0, 230, 118, 0.2); color: var(--bull); }
+        .badge-bear { background: rgba(255, 68, 68, 0.2); color: var(--bear); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="title-block">
+            <h1>⚡ 權證標的日報</h1>
+            <p style="color:var(--muted); font-size:12px;">WARRANT DAILY SCANNER</p>
+        </div>
+        <div class="date-badge" id="dateBadge">更新中...</div>
+    </header>
+
+    <div class="status-bar" id="statusBar">▸ 正在同步最新權證報表...</div>
+
+    <div class="summary-row">
+        <div class="summary-card"><span class="num bull" id="bullCount">0</span><span style="color:var(--muted)">看多</span></div>
+        <div class="summary-card"><span class="num bear" id="bearCount">0</span><span style="color:var(--muted)">看空</span></div>
+        <div class="summary-card"><span class="num" id="totalCount" style="color:var(--accent)">0</span><span style="color:var(--muted)">總計</span></div>
+    </div>
+
+    <div id="stocksList" class="stocks-list">
+        </div>
+</div>
+
+<script>
+    async function init() {
+        const list = document.getElementById('stocksList');
+        const status = document.getElementById('statusBar');
+        try {
+            const res = await fetch('./data.json?t=' + Date.now());
+            const data = await res.json();
+            
+            document.getElementById('dateBadge').textContent = data.lastUpdate;
+            document.getElementById('bullCount').textContent = data.stocks.filter(s => s.direction === 'bull').length;
+            document.getElementById('bearCount').textContent = data.stocks.filter(s => s.direction === 'bear').length;
+            document.getElementById('totalCount').textContent = data.stocks.length;
+
+            list.innerHTML = data.stocks.map(s => `
+                <div class="stock-card">
+                    <div class="stock-info">
+                        <div class="stock-id">${s.id} <small style="font-size:14px; color:var(--muted)">${s.name}</small></div>
+                        <div class="stock-title"><a href="${s.link}" target="_blank">${s.title}</a></div>
+                        <div>
+                            <span class="tag" style="color:${s.direction==='bull'?'var(--bull)':'var(--bear)'}">${s.direction==='bull'?'▲ 認購':'▼ 認售'}</span>
+                            <span class="tag">${s.sourceName}</span>
+                        </div>
+                    </div>
+                    <div style="text-align:right">
+                        <div class="badge ${s.direction==='bull'?'badge-bull':'badge-bear'}">${s.direction==='bull'?'CALL':'PUT'}</div>
+                        <div style="font-size:12px; color:var(--muted); margin-top:10px">${s.date} ${s.time}</div>
+                    </div>
+                </div>
+            `).join('');
+            status.innerHTML = "✓ 數據同步完成，點擊新聞標題可看原文";
+            status.style.borderLeftColor = "var(--bull)";
+        } catch(e) {
+            status.innerHTML = "⚠ 讀取失敗，請確認是否已執行過 Actions 產生 data.json";
+        }
+    }
+    init();
+</script>
+</body>
+</html>
